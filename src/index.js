@@ -1,11 +1,4 @@
-const { syncAirtableBase } = require('./tasks');
+const tasks = require('./tasks');
+const utils = require('./utils');
 
-syncAirtableBase()
-  .then((res) => {
-    console.log(res);
-    process.exit();
-  })
-  .catch((err) => {
-    console.log(err);
-    process.exit(1);
-  });
+module.exports = { ...tasks, utils };

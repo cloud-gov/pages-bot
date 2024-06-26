@@ -4,7 +4,9 @@
   "description": "A bot to handle admin tasks related to the Pages platform.",
   "main": "index.js",
   "scripts": {
-    "test": "node --test"
+    "sync-airtable": "node --env-file=.env ./tasks/verify-db-queries.js",
+    "test": "node --test",
+    "verify-db-queries": "node --env-file=.env ./tasks/verify-db-queries.js"
   },
   "author": "",
   "license": "ISC",
