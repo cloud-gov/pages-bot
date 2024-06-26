@@ -1,0 +1,133 @@
+---
+#@ load("funcs.lib.yml", "slack_hook")
+#@ load("@ytt:data", "data")
+#@ load("@ytt:template", "template")
+
+#!  JOBS
+
+jobs:
+  - name: set-pipeline
+    plan:
+      - get: src
+        resource: pr-((deploy-env))
+        trigger: true
+      - get: pipeline-tasks
+      - get: general-task
+      - task: init
+        image: general-task
+        file: pipeline-tasks/tasks/init.yml
+        params:
+          PIPELINE_YML: src/ci/pipeline-dev.yml
+      - set_pipeline: pages-bot
+        file: compiled/set-pipeline.yml
+        instance_vars:
+          deploy-env: ((deploy-env))
+
+  - name: test-((deploy-env))
+    plan:
+      - get: src
+        resource: pr-((deploy-env))
+        trigger: true
+        passed: [set-pipeline]
+
+      - put: src
+        resource: pr-((deploy-env))
+        params:
+          path: src
+          status: pending
+          base_context: concourse
+          context: test-pages-pages-bot-((deploy-env))
+      - get: node
+      - task: install-deps
+        file: src/ci/partials/install-deps.yml
+        image: node
+      - task: test
+        image: node
+        file: src/ci/partials/test.yml
+
+    on_success:
+      put: src
+      resource: pr-((deploy-env))
+      params:
+        path: src
+        status: success
+        base_context: concourse
+        context: test-pages-pages-bot-((deploy-env))
+
+    on_failure:
+      in_parallel:
+        - put: src
+          resource: pr-((deploy-env))
+          params:
+            path: src
+            status: failure
+            base_context: concourse
+            context: test-pages-pages-bot-((deploy-env))
+        -  #@ slack_hook("failure", "tests")
+
+  - name: audit-dependencies
+    plan:
+      - get: src
+        resource: pr-((deploy-env))
+        trigger: true
+        passed: [set-pipeline]
+
+      - put: src
+        resource: pr-((deploy-env))
+        params:
+          path: src
+          status: pending
+          base_context: concourse
+          context: audit-dependencies
+
+      - get: node
+      - task: pip-audit
+        image: node
+        file: src/ci/partials/audit.yml
+
+    on_failure:
+      in_parallel:
+        - put: src
+          resource: pr-((deploy-env))
+          params:
+            path: src
+            status: failure
+            base_context: concourse
+            context: audit-dependencies
+        -  #@ slack_hook("failure", "dependency audit")
+
+    on_success:
+      in_parallel:
+        - put: src
+          resource: pr-((deploy-env))
+          params:
+            path: src
+            status: success
+            base_context: concourse
+            context: audit-dependencies
+        -  #@ slack_hook("success", "dependency audit")
+
+#!  RESOURCES
+
+resources:
+  - name: pr-((deploy-env))
+    type: pull-request
+    check_every: 1m
+    source:
+      repository: cloud-gov/pages-bot
+      access_token: ((gh-access-token))
+      base_branch: main
+      disable_forks: true
+      ignore_drafts: false
+
+  - name: slack
+  - name: pipeline-tasks
+  - name: node
+  - name: general-task
+
+#!  RESOURCE TYPES
+
+resource_types:
+  - name: git
+  - name: slack-notification
+  - name: pull-request
