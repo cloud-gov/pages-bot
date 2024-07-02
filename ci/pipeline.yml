@@ -1,0 +1,250 @@
+---
+#@ load("funcs.lib.yml", "slack_hook", "pr_hook")
+#@ load("@ytt:data", "data")
+#@ load("@ytt:template", "template")
+
+#@ env = data.values.env
+
+#!  JOBS
+
+jobs:
+  - name: set-pipeline
+    plan:
+      - get: src
+        params:
+          #@ if/end env != 'dev':
+          depth: 1
+          #@ if/end env == 'dev':
+          integration_tool: checkout
+        trigger: true
+      - get: pipeline-tasks
+      - get: general-task
+      - task: boot
+        image: general-task
+        file: pipeline-tasks/tasks/boot.yml
+        params:
+          ENV_OVERRIDE: ((deploy-env))
+      - set_pipeline: self
+        file: compiled/set-pipeline.yml
+        instance_vars:
+          deploy-env: ((deploy-env))
+
+  #@ if/end env == 'staging':
+  - name: update-release-branch
+    plan:
+      - get: src
+        passed:
+          - set-pipeline
+          - verify-database-queries
+          - audit-dependencies
+          - run-tests
+        trigger: true
+      - get: general-task
+      - get: pipeline-tasks
+      - task: update-release-branch
+        image: general-task
+        file: pipeline-tasks/tasks/update-release-branch.yml
+
+  #@ if/end env == 'production':
+  - name: release
+    plan:
+      - get: src
+        params:
+          #@ if/end env != 'dev':
+          depth: 1
+          #@ if/end env == 'dev':
+          integration_tool: checkout
+        trigger: true
+        passed:
+          - set-pipeline
+          - verify-database-queries
+          - audit-dependencies
+          - run-tests
+      -  #@ template.replace(data.values.release_steps)
+
+  - name: run-tests
+    plan:
+      - get: src
+        trigger: true
+        passed: [set-pipeline]
+      #@ if/end env == 'dev':
+      -  #@ pr_hook("pending", "test-pages-bot-dev")
+      - get: node
+      - task: install-deps
+        file: src/ci/partials/install-deps.yml
+        image: node
+      - task: test
+        image: node
+        file: src/ci/partials/test.yml
+
+    #@ if/end env == 'dev':
+    on_success: #@ pr_hook("pending", "test-pages-bot-dev")
+
+    on_failure:
+      in_parallel:
+        #@ if/end env == 'dev':
+        -  #@ pr_hook("failure", "test-pages-bot-dev")
+        -  #@ slack_hook("failure", "tests")
+
+  - name: audit-dependencies
+    plan:
+      - get: src
+        trigger: true
+        passed: [set-pipeline]
+      #@ if/end env == 'dev':
+      -  #@ pr_hook("pending", "audit-dependencies-dev")
+      - get: node
+      - get: pipeline-tasks
+      - task: npm-audit
+        image: node
+        file: pipeline-tasks/tasks/npm-audit.yml
+
+    on_failure:
+      in_parallel:
+        #@ if/end env == 'dev':
+        -  #@ pr_hook("failure", "audit-dependencies-dev")
+        -  #@ slack_hook("failure", "dependency audit")
+
+    on_success:
+      in_parallel:
+        #@ if/end env == 'dev':
+        -  #@ pr_hook("success", "audit-dependencies-dev")
+        -  #@ slack_hook("success", "dependency audit")
+
+  - name: verify-database-queries
+    plan:
+      - get: src
+        trigger: true
+        passed: [set-pipeline]
+      #@ if/end env == 'dev':
+      -  #@ pr_hook("pending", "verify-database-queries-dev")
+      - get: pipeline-tasks
+      - get: general-task
+      - get: node
+      - task: install-deps
+        file: src/ci/partials/install-deps.yml
+        image: node
+      - task: get-app-env
+        image: general-task
+        file: pipeline-tasks/tasks/get-app-env.yml
+        params:
+          _: #@ template.replace(data.values.env_cf)
+          APP_ENV: ((deploy-env))
+          CF_APP_NAME: pages-((deploy-env))
+      - task: run-task
+        image: node
+        file: pipeline-tasks/tasks/run-command.yml
+        params:
+          COMMAND: npm run verify-db-queries
+
+    on_failure:
+      in_parallel:
+        #@ if/end env == 'dev':
+        -  #@ pr_hook("failure", "verify-database-queries-dev")
+        -  #@ slack_hook("failure", "Verified database queries")
+
+    on_success:
+      in_parallel:
+        #@ if/end env == 'dev':
+        -  #@ pr_hook("success", "verify-database-queries-dev")
+        -  #@ slack_hook("success", "Failed database queries")
+
+  #@ if/end env == 'production':
+  - name: sync-airtable-base
+    plan:
+      - get: src
+        trigger: true
+        passed:
+          - verify-database-queries
+          - audit-dependencies
+          - run-tests
+      - get: pipeline-tasks
+      - get: general-task
+      - get: node
+      - get: nightly
+        trigger: true
+      - task: install-deps
+        file: src/ci/partials/install-deps.yml
+        image: node
+      - task: get-app-env
+        image: general-task
+        file: pipeline-tasks/tasks/get-app-env.yml
+        params:
+          _: #@ template.replace(data.values.env_cf)
+          APP_ENV: ((deploy-env))
+          CF_APP_NAME: pages-((deploy-env))
+      - task: run-task
+        image: node
+        file: pipeline-tasks/tasks/run-command.yml
+        params:
+          COMMAND: npm run sync-airtable
+          AIRTABLE_API_KEY: ((pages-airtable-api-key))
+          AIRTABLE_BASE_ID: ((pages-airtable-base-id))
+
+#!  RESOURCES
+
+resources:
+  #@ if/end env == 'dev':
+  - name: src
+    type: pull-request
+    check_every: 1m
+    source:
+      repository: cloud-gov/pages-bot
+      access_token: ((gh-access-token))
+      base_branch: main
+      disable_forks: true
+      ignore_drafts: false
+
+  #@ if/end env == 'staging':
+  - name: src
+    type: git
+    icon: github
+    source:
+      uri: git@github.com:cloud-gov/pages-bot
+      branch: main
+      commit_verification_keys: ((cloud-gov-pages-gpg-keys))
+      private_key: ((pages-gpg-operations-github-sshkey.private_key))
+
+  #@ if env == 'production':
+  - name: src
+    type: git
+    icon: github
+    source:
+      uri: git@github.com:cloud-gov/pages-bot
+      branch: main
+      commit_verification_keys: ((cloud-gov-pages-gpg-keys))
+      tag_filter: 0.*.*
+      fetch_tags: true
+
+  - name: pages-release
+    type: github-release
+    source:
+      owner: cloud-gov
+      repository: pages-bot
+      access_token: ((gh-access-token))
+
+  - name: nightly
+    type: time
+    source:
+      start: 12:00 AM
+      stop: 1:00 AM
+      location: America/New_York
+  #@ end
+
+  - name: slack
+  - name: pipeline-tasks
+  - name: node
+  - name: general-task
+
+#!  RESOURCE TYPES
+
+resource_types:
+  - name: git
+  - name: slack-notification
+  - name: registry-image
+  #@ if/end env == 'dev':
+  - name: pull-request
+  #@ if env == 'production':
+  - name: github-release
+  - name: time
+  #@ end

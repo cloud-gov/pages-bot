@@ -7,7 +7,11 @@ cloud.gov Pages bot is a collection of tasks to help manage the platform and con
 
 ### Syncing Pages info to airtable
 
-Airtable is used to manage, aggregate, and view disparate data streams in cloud.gov. The `syncAirtableBase` task runs daily to sync our Pages platfrom data with our cloud.gov Airtable base. This "upserts" data from Pages to the base to avoid duplicate data entries while providing the latest information to date.
+Airtable is used to manage, aggregate, and view disparate data streams in cloud.gov. The `syncAirtableBase` task runs daily to sync our Pages platfrom data with our cloud.gov Airtable base. This "upserts" data from Pages to the base to avoid duplicate data entries while providing the latest information to date. This task only runs in production since we only need to sync from the production environment.
+
+### Verify database queries
+
+The `verifyDBQueries` task runs in each environment on every update to verify the database connection is valid for the results schema is as expected. This task is used to provide added confidence with updates since the `syncAirtableBase` task only runs in production and relies on the database queries.
 
 #### Environment Vars
 
