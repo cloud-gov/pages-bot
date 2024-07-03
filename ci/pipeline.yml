@@ -12,8 +12,6 @@ jobs:
     plan:
       - get: src
         params:
-          #@ if/end env != 'dev':
-          depth: 1
           #@ if/end env == 'dev':
           integration_tool: checkout
         trigger: true
@@ -68,7 +66,7 @@ jobs:
         trigger: true
         passed: [set-pipeline]
       #@ if/end env == 'dev':
-      -  #@ pr_hook("pending", "test-pages-bot-dev")
+      -  #@ pr_hook("pending", "run-tests")
       - get: node
       - task: install-deps
         file: src/ci/partials/install-deps.yml
@@ -78,12 +76,12 @@ jobs:
         file: src/ci/partials/test.yml
 
     #@ if/end env == 'dev':
-    on_success: #@ pr_hook("pending", "test-pages-bot-dev")
+    on_success: #@ pr_hook("success", "run-tests")
 
     on_failure:
       in_parallel:
         #@ if/end env == 'dev':
-        -  #@ pr_hook("failure", "test-pages-bot-dev")
+        -  #@ pr_hook("failure", "run-tests")
         -  #@ slack_hook("failure", "tests")
 
   - name: audit-dependencies
@@ -92,7 +90,7 @@ jobs:
         trigger: true
         passed: [set-pipeline]
       #@ if/end env == 'dev':
-      -  #@ pr_hook("pending", "audit-dependencies-dev")
+      -  #@ pr_hook("pending", "audit-dependencies")
       - get: node
       - get: pipeline-tasks
       - task: npm-audit
@@ -102,13 +100,13 @@ jobs:
     on_failure:
       in_parallel:
         #@ if/end env == 'dev':
-        -  #@ pr_hook("failure", "audit-dependencies-dev")
+        -  #@ pr_hook("failure", "audit-dependencies")
         -  #@ slack_hook("failure", "dependency audit")
 
     on_success:
       in_parallel:
         #@ if/end env == 'dev':
-        -  #@ pr_hook("success", "audit-dependencies-dev")
+        -  #@ pr_hook("success", "audit-dependencies")
         -  #@ slack_hook("success", "dependency audit")
 
   - name: verify-database-queries
@@ -117,7 +115,7 @@ jobs:
         trigger: true
         passed: [set-pipeline]
       #@ if/end env == 'dev':
-      -  #@ pr_hook("pending", "verify-database-queries-dev")
+      -  #@ pr_hook("pending", "verify-database-queries")
       - get: pipeline-tasks
       - get: general-task
       - get: node
@@ -140,13 +138,13 @@ jobs:
     on_failure:
       in_parallel:
         #@ if/end env == 'dev':
-        -  #@ pr_hook("failure", "verify-database-queries-dev")
+        -  #@ pr_hook("failure", "verify-database-queries")
         -  #@ slack_hook("failure", "Verified database queries")
 
     on_success:
       in_parallel:
         #@ if/end env == 'dev':
-        -  #@ pr_hook("success", "verify-database-queries-dev")
+        -  #@ pr_hook("success", "verify-database-queries")
         -  #@ slack_hook("success", "Failed database queries")
 
   #@ if/end env == 'production':
