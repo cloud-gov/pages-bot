@@ -54,7 +54,9 @@ function findRelatedAirtableId(record, related, relationKey) {
 }
 
 function updateRecordRelations(records, related, relationKey) {
-  return records.map((record) => findRelatedAirtableId(record, related, relationKey));
+  return records.map((record) =>
+    findRelatedAirtableId(record, related, relationKey)
+  );
 }
 
 module.exports = {

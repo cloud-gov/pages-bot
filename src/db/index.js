@@ -107,7 +107,7 @@ class BotDBQueries {
     const schema = this.tableSchema[tableName];
     if (!schema) throw new Error(`No fields exist for table ${tableName}`);
 
-    return schema
+    return schema;
   }
 
   async getSingleTableRecords(table) {
@@ -131,7 +131,10 @@ class BotDBQueries {
   }
 
   async getSites() {
-    return this.getSingleTableRecords('sites');
+    const { tableName, queryFields } = this.getTableFields('sites');
+    return this.client(tableName)
+      .select(...queryFields)
+      .whereNotNull('organizationId');
   }
 
   async getUsers() {
