@@ -213,6 +213,7 @@ resources:
       commit_verification_keys: ((cloud-gov-pages-gpg-keys))
       tag_filter: 0.*.*
       fetch_tags: true
+      private_key: ((pages-gpg-operations-github-sshkey.private_key))
 
   - name: pages-release
     type: github-release
