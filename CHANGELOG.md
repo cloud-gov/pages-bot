@@ -1,3 +1,9 @@
+## 0.1.2 (2024-07-05)
+
+### Fixed
+
+- Airtable sync task call and DB query
+
 ## 0.1.1 (2024-07-05)
 
 ### Fixed
