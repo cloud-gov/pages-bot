@@ -1,3 +1,9 @@
+## 0.1.3 (2024-07-05)
+
+### Fixed
+
+- **ci**: Slack message for verify-database-queries task hooks
+
 ## 0.1.2 (2024-07-05)
 
 ### Fixed
