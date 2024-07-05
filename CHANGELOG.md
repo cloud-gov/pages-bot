@@ -1,3 +1,9 @@
+## 0.1.1 (2024-07-05)
+
+### Fixed
+
+- **ci**: Production git src config key
+
 ## 0.1.0 (2024-07-03)
 
 ### Added
