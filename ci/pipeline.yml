@@ -139,13 +139,13 @@ jobs:
       in_parallel:
         #@ if/end env == 'dev':
         -  #@ pr_hook("failure", "verify-database-queries")
-        -  #@ slack_hook("failure", "Verified database queries")
+        -  #@ slack_hook("failure", "verify-database-queries")
 
     on_success:
       in_parallel:
         #@ if/end env == 'dev':
         -  #@ pr_hook("success", "verify-database-queries")
-        -  #@ slack_hook("success", "Failed database queries")
+        -  #@ slack_hook("success", "verify-database-queries")
 
   #@ if/end env == 'production':
   - name: sync-airtable-base
