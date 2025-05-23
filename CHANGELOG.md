@@ -1,3 +1,9 @@
+## 0.1.4 (2025-05-23)
+
+### Maintenance
+
+- Update CONTRIBUTING.md
+
 ## 0.1.3 (2024-07-05)
 
 ### Fixed
