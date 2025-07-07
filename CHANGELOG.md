@@ -1,3 +1,10 @@
+## 0.1.4 (2025-07-07)
+
+### Maintenance
+
+- Set security considerations action to read only
+- Update CONTRIBUTING.md
+
 ## 0.1.3 (2024-07-05)
 
 ### Fixed
