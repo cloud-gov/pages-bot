@@ -4,4 +4,4 @@ outputs: [name: src]
 run:
   dir: src
   path: bash
-  args: [-c, "npm install"]
+  args: [-c, "npm ci"]
