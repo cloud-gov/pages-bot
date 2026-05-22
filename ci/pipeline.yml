@@ -67,12 +67,12 @@ jobs:
         passed: [set-pipeline]
       #@ if/end env == 'dev':
       -  #@ pr_hook("pending", "run-tests")
-      - get: node
+      - get: node24
       - task: install-deps
         file: src/ci/partials/install-deps.yml
-        image: node
+        image: node24
       - task: test
-        image: node
+        image: node24
         file: src/ci/partials/test.yml
 
     #@ if/end env == 'dev':
@@ -91,10 +91,10 @@ jobs:
         passed: [set-pipeline]
       #@ if/end env == 'dev':
       -  #@ pr_hook("pending", "audit-dependencies")
-      - get: node
+      - get: node24
       - get: pipeline-tasks
       - task: npm-audit
-        image: node
+        image: node24
         file: pipeline-tasks/tasks/npm-audit.yml
 
     on_failure:
@@ -118,10 +118,10 @@ jobs:
       -  #@ pr_hook("pending", "verify-database-queries")
       - get: pipeline-tasks
       - get: general-task
-      - get: node
+      - get: node24
       - task: install-deps
         file: src/ci/partials/install-deps.yml
-        image: node
+        image: node24
       - task: get-app-env
         image: general-task
         file: pipeline-tasks/tasks/get-app-env.yml
@@ -130,7 +130,7 @@ jobs:
           APP_ENV: ((deploy-env))
           CF_APP_NAME: pages-((deploy-env))
       - task: run-task
-        image: node
+        image: node24
         file: pipeline-tasks/tasks/run-command.yml
         params:
           COMMAND: npm run verify-db-queries
@@ -158,12 +158,12 @@ jobs:
           - run-tests
       - get: pipeline-tasks
       - get: general-task
-      - get: node
+      - get: node24
       - get: nightly
         trigger: true
       - task: install-deps
         file: src/ci/partials/install-deps.yml
-        image: node
+        image: node24
       - task: get-app-env
         image: general-task
         file: pipeline-tasks/tasks/get-app-env.yml
@@ -172,7 +172,7 @@ jobs:
           APP_ENV: ((deploy-env))
           CF_APP_NAME: pages-((deploy-env))
       - task: run-task
-        image: node
+        image: node24
         file: pipeline-tasks/tasks/run-command.yml
         params:
           COMMAND: npm run sync-airtable
@@ -232,7 +232,7 @@ resources:
 
   - name: slack
   - name: pipeline-tasks
-  - name: node
+  - name: node24
   - name: general-task
 
 #!  RESOURCE TYPES
