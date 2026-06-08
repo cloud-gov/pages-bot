@@ -4,6 +4,8 @@
 #@ load("@ytt:template", "template")
 
 #@ env = data.values.env
+#@ bucket_name = "pages-exports" + "-" + env
+#@ is_nightly_env = env in ["dev", "staging", "production"]
 
 #!  JOBS
 
@@ -147,8 +149,7 @@ jobs:
         -  #@ pr_hook("success", "verify-database-queries")
         -  #@ slack_hook("success", "verify-database-queries")
 
-  #@ if/end env == 'production':
-  - name: sync-airtable-base
+  - name: sync-s3
     plan:
       - get: src
         trigger: true
@@ -159,8 +160,10 @@ jobs:
       - get: pipeline-tasks
       - get: general-task
       - get: node24
+      #@ if is_nightly_env:
       - get: nightly
         trigger: true
+      #@ end
       - task: install-deps
         file: src/ci/partials/install-deps.yml
         image: node24
@@ -171,13 +174,38 @@ jobs:
           _: #@ template.replace(data.values.env_cf)
           APP_ENV: ((deploy-env))
           CF_APP_NAME: pages-((deploy-env))
+      - task: create-service-key
+        image: general-task
+        file: src/ci/partials/create-service-key.yml
+        params:
+          _: #@ template.replace(data.values.env_cf)
+          APP_ENV: ((deploy-env))
+          CF_APP_NAME: pages-((deploy-env))
+          BUCKET_NAME: #@ bucket_name
       - task: run-task
         image: node24
         file: pipeline-tasks/tasks/run-command.yml
         params:
-          COMMAND: npm run sync-airtable
-          AIRTABLE_API_KEY: ((pages-airtable-api-key))
-          AIRTABLE_BASE_ID: ((pages-airtable-base-id))
+          COMMAND: npm run sync-s3
+      - task: put-s3
+        image: general-task
+        config:
+          platform: linux
+          inputs:
+            - name: src
+            - name: s3-credentials
+          params:
+            APP_ENV: ((deploy-env))
+          run:
+            path: src/ci/tasks/put-s3.sh
+      - task: delete-service-key
+        image: general-task
+        file: src/ci/partials/delete-service-key.yml
+        params:
+          _: #@ template.replace(data.values.env_cf)
+          APP_ENV: ((deploy-env))
+          CF_APP_NAME: pages-((deploy-env))
+          BUCKET_NAME: #@ bucket_name
 
 #!  RESOURCES
 
@@ -221,7 +249,9 @@ resources:
       owner: cloud-gov
       repository: pages-bot
       access_token: ((gh-access-token))
+  #@ end
 
+  #@ if is_nightly_env:
   - name: nightly
     type: time
     source:
