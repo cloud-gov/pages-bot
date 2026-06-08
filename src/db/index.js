@@ -143,6 +143,10 @@ class BotDBQueries {
       .join('uaa_identity', 'user.id', '=', 'uaa_identity.userId')
       .select(...queryFields);
   }
+
+    async getNamedCollectionData(table, data, fileName) {
+        return Promise.resolve( { collectionName: table, collection: data, fileName });
+    }
 }
 
 module.exports = {

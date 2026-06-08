@@ -1,41 +1,12 @@
 const assert = require('node:assert');
 const { BotDBQueries } = require('../db');
-const queries = require('../airtable');
+const { exportToCsv } = require('../s3');
 const { areArraysEqual } = require('../utils');
+
 
 class TaskRunner {
   constructor({ connectionString }) {
     this.db = new BotDBQueries({ connectionString });
-    this.airtable = queries;
-  }
-
-  async syncAirtableBase() {
-    console.log('Updating Users');
-    const users = await this.db.getUsers();
-    await this.airtable.upsertUsers(users);
-    console.log(`Updated ${users.length} records\n`);
-
-    console.log('Updating Orgs');
-    const orgs = await this.db.getOrgs();
-    await this.airtable.upsertOrgs(orgs);
-    console.log(`Updated ${orgs.length} records\n`);
-
-    console.log('Updating Sites');
-    const sites = await this.db.getSites();
-    await this.airtable.upsertSites(sites);
-    console.log(`Updated ${sites.length} records\n`);
-
-    console.log('Updating Domains');
-    const domains = await this.db.getDomains();
-    await this.airtable.upsertDomains(domains);
-    console.log(`Updated ${domains.length} records\n`);
-
-    console.log('Updating Org Roles');
-    const orgRoles = await this.db.getOrgRoles();
-    await this.airtable.upsertOrgRoles(orgRoles);
-    console.log(`Updated ${orgRoles.length} \n`);
-
-    return 'success';
   }
 
   async verifyDBQueries() {
@@ -49,6 +20,9 @@ class TaskRunner {
 
     // Runs through all queries to verify records exist
     collections.map((collection) => {
+
+      exportToCsv(collection);
+
       assert.ok(Array.isArray(collection));
       assert.ok(collection.length >= 1);
 
@@ -63,6 +37,23 @@ class TaskRunner {
       assert.ok(hasExpectResultProperties.length === 1);
     });
   }
+
+  async syncS3() {
+        const collections = await Promise.all([
+            this.db.getNamedCollectionData("Domains", await this.db.getDomains(), 'domains'),
+            this.db.getNamedCollectionData("Orgs", await this.db.getOrgs(), 'orgs'),
+            this.db.getNamedCollectionData("Org Roles", await this.db.getOrgRoles(), 'org-roles'),
+            this.db.getNamedCollectionData("Sites", await this.db.getSites(), 'sites'),
+            this.db.getNamedCollectionData("Users", await this.db.getUsers(), 'users'),
+        ]);
+
+        collections.map(async (namedCollectionData) => {
+            const destinationDir = await exportToCsv(namedCollectionData.collection, namedCollectionData.fileName);
+            console.log(`Exported collection ${namedCollectionData.collectionName} into ${destinationDir}, ${namedCollectionData.collection.length} records.`);
+        });
+
+        return 'success';
+    }
 }
 
 module.exports = {

@@ -4,7 +4,7 @@
   "description": "A bot to handle admin tasks related to the Pages platform.",
   "main": "index.js",
   "scripts": {
-    "sync-airtable": "node --env-file=.env ./tasks/sync-airtable.js",
+    "sync-s3": "node --env-file=.env ./tasks/sync-s3.js",
     "test": "node --test",
     "verify-db-queries": "node --env-file=.env ./tasks/verify-db-queries.js"
   },
@@ -15,7 +15,6 @@
     "npm": "^11.10.0"
   },
   "dependencies": {
-    "airtable": "^0.12.2",
     "knex": "^3.1.0",
     "pg": "^8.12.0"
   }
