@@ -144,9 +144,9 @@ class BotDBQueries {
       .select(...queryFields);
   }
 
-    async getNamedCollectionData(table, data, fileName) {
-        return Promise.resolve( { collectionName: table, collection: data, fileName });
-    }
+  async getNamedCollectionData(table, data, fileName) {
+    return Promise.resolve({ collectionName: table, collection: data, fileName });
+  }
 }
 
 module.exports = {
