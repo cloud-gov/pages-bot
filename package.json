@@ -4,7 +4,8 @@
   "description": "A bot to handle admin tasks related to the Pages platform.",
   "main": "index.js",
   "scripts": {
-    "sync-s3": "node --env-file=.env ./tasks/sync-s3.js",
+    "sync-s3-export": "node --env-file=.env ./tasks/sync-s3-export.js",
+    "sync-s3-usage": "node --env-file=.env ./tasks/sync-s3-usage.js",
     "test": "node --test",
     "verify-db-queries": "node --env-file=.env ./tasks/verify-db-queries.js"
   },

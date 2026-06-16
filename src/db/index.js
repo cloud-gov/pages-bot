@@ -70,6 +70,49 @@ const USER_RESULT_FIELDS = [
   'deletedAt',
 ];
 
+const FIELD_ORG_ID = 'organizationId';
+const FIELD_ORG_NAME = 'organizationName';
+const FIELD_SITE_ID = 'siteId';
+const FIELD_SITE_OWNER = 'siteOwner';
+const FIELD_SITE_REPOSITORY = 'siteRepository';
+const FIELD_SITE_CREATED_AT = 'siteCreatedAt';
+const FIELD_SITE_DELETED_AT = 'siteDeletedAt';
+const FIELD_DOMAIN_ID = 'domainId';
+const FIELD_DOMAIN_NAMES = 'domainNames';
+const FIELD_DOMAIN_STATE = 'domainState';
+const FIELD_DOMAIN_CREATED_AT = 'domainCreatedAt';
+const FIELD_DOMAIN_DELETED_AT = 'domainDeletedAt';
+
+const USAGE_QUERY_FIELDS = [
+  'organization.id as organizationId',
+  'organization.name as organizationName',
+  'site.id as siteId',
+  'site.owner as siteOwner',
+  'site.repository as siteRepository',
+  'site.createdAt as siteCreatedAt',
+  'site.deletedAt as siteDeletedAt',
+  'domain.id as domainId',
+  'domain.names as domainNames',
+  'domain.state as domainState',
+  'domain.createdAt as domainCreatedAt',
+  'domain.deletedAt as domainDeletedAt',
+];
+
+const USAGE_RESULT_FIELDS = [
+  FIELD_ORG_ID,
+  FIELD_ORG_NAME,
+  FIELD_SITE_ID,
+  FIELD_SITE_OWNER,
+  FIELD_SITE_REPOSITORY,
+  FIELD_SITE_CREATED_AT,
+  FIELD_SITE_DELETED_AT,
+  FIELD_DOMAIN_ID,
+  FIELD_DOMAIN_NAMES,
+  FIELD_DOMAIN_STATE,
+  FIELD_DOMAIN_CREATED_AT,
+  FIELD_DOMAIN_DELETED_AT,
+];
+
 class BotDBQueries {
   constructor({ connectionString }) {
     this.client = client.DBClient({ connectionString });
@@ -100,6 +143,11 @@ class BotDBQueries {
       queryFields: USER_QUERY_FIELDS,
       resultFields: USER_RESULT_FIELDS,
       tableName: 'user',
+    },
+    usage: {
+      queryFields: USAGE_QUERY_FIELDS,
+      resultFields: USAGE_RESULT_FIELDS,
+      tableName: 'usage',
     },
   };
 
@@ -144,12 +192,31 @@ class BotDBQueries {
       .select(...queryFields);
   }
 
-  async getNamedCollectionData(table, data, fileName) {
-    return Promise.resolve({ collectionName: table, collection: data, fileName });
+  async getUsage() {
+    const { queryFields } = this.getTableFields('usage');
+    return this.client('organization')
+      .join('site', 'organization.id', '=', 'site.organizationId')
+      .join('domain', 'site.id', '=', 'domain.siteId')
+      .select(...queryFields)
+      .orderBy('organization.id')
+      .orderBy('site.id')
+      .orderBy('domain.id');
   }
 }
 
 module.exports = {
   ...client,
   BotDBQueries,
+  FIELD_DOMAIN_ID,
+  FIELD_DOMAIN_NAMES,
+  FIELD_DOMAIN_STATE,
+  FIELD_DOMAIN_CREATED_AT,
+  FIELD_DOMAIN_DELETED_AT,
+  FIELD_ORG_ID,
+  FIELD_ORG_NAME,
+  FIELD_SITE_ID,
+  FIELD_SITE_OWNER,
+  FIELD_SITE_REPOSITORY,
+  FIELD_SITE_CREATED_AT,
+  FIELD_SITE_DELETED_AT,
 };

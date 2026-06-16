@@ -8,4 +8,4 @@ cf auth
 cf t -o $CF_ORG -s $CF_SPACE
 
 # Delete credentials
-cf delete-service-key $BUCKET_NAME $BUCKET_NAME-pipeline-key -f
+cf delete-service-key $BUCKET_NAME $BUCKET_NAME-$SYNC_TYPE-pipeline-key -f
