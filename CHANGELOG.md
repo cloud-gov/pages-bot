@@ -1,3 +1,15 @@
+## 0.2.0 (2026-06-17)
+
+### Added
+
+- Export pages data to CSV using FOCUS format #2968
+
+### Maintenance
+
+- Add prettier formatting tool to pages-bot 2966
+- Move cg-bot airtable job to export to CSV 2956
+- update node and npm to harden the npmrc file 2953
+
 ## 0.1.6 (2026-03-17)
 
 ### Maintenance
