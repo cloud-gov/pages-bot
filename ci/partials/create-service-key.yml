@@ -7,6 +7,7 @@ params:
     CF_ORG: ((cf-org))
     CF_SPACE: ((cf-space))
     BUCKET_NAME:
+    SYNC_TYPE:
     APP_ENV:
 run:
   path: src/ci/tasks/create-service-key.sh

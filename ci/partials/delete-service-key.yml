@@ -5,5 +5,6 @@ params:
   CF_ORG: ((cf-org))
   CF_SPACE: ((cf-space))
   BUCKET_NAME:
+  SYNC_TYPE:
 run:
   path: src/ci/tasks/delete-service-key.sh

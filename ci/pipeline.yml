@@ -149,7 +149,7 @@ jobs:
         -  #@ pr_hook("success", "verify-database-queries")
         -  #@ slack_hook("success", "verify-database-queries")
 
-  - name: sync-s3
+  - name: sync-s3-export
     plan:
       - get: src
         trigger: true
@@ -182,11 +182,12 @@ jobs:
           APP_ENV: ((deploy-env))
           CF_APP_NAME: pages-((deploy-env))
           BUCKET_NAME: #@ bucket_name
+          SYNC_TYPE: EXPORT
       - task: run-task
         image: node24
         file: pipeline-tasks/tasks/run-command.yml
         params:
-          COMMAND: npm run sync-s3
+          COMMAND: npm run sync-s3-export
       - task: put-s3
         image: general-task
         config:
@@ -197,7 +198,7 @@ jobs:
           params:
             APP_ENV: ((deploy-env))
           run:
-            path: src/ci/tasks/put-s3.sh
+            path: src/ci/tasks/put-s3-export.sh
       - task: delete-service-key
         image: general-task
         file: src/ci/partials/delete-service-key.yml
@@ -206,6 +207,91 @@ jobs:
           APP_ENV: ((deploy-env))
           CF_APP_NAME: pages-((deploy-env))
           BUCKET_NAME: #@ bucket_name
+          SYNC_TYPE: EXPORT
+
+    on_failure:
+      in_parallel:
+        #@ if/end env == 'dev':
+        -  #@ pr_hook("failure", "sync-s3-export")
+        -  #@ slack_hook("failure", "sync-s3-export")
+
+    on_success:
+      in_parallel:
+        #@ if/end env == 'dev':
+        -  #@ pr_hook("success", "sync-s3-export")
+        -  #@ slack_hook("success", "sync-s3-export")
+
+  - name: sync-s3-usage
+    plan:
+      - get: src
+        trigger: true
+        passed:
+          - verify-database-queries
+          - audit-dependencies
+          - run-tests
+      - get: pipeline-tasks
+      - get: general-task
+      - get: node24
+      - get: hourly
+        trigger: true
+      - task: install-deps
+        file: src/ci/partials/install-deps.yml
+        image: node24
+      - task: get-app-env
+        image: general-task
+        file: pipeline-tasks/tasks/get-app-env.yml
+        params:
+          _: #@ template.replace(data.values.env_cf)
+          APP_ENV: ((deploy-env))
+          CF_APP_NAME: pages-((deploy-env))
+      - task: create-service-key
+        image: general-task
+        file: src/ci/partials/create-service-key.yml
+        params:
+          _: #@ template.replace(data.values.env_cf)
+          APP_ENV: ((deploy-env))
+          CF_APP_NAME: pages-((deploy-env))
+          BUCKET_NAME: #@ bucket_name
+          SYNC_TYPE: USAGE
+      - task: run-task
+        image: node24
+        file: pipeline-tasks/tasks/run-command.yml
+        params:
+          COMMAND: npm run sync-s3-usage
+          SITE_DOMAIN_CREDITS_PER_MONTH: ((pages-site-domain-credits-per-month=12))
+          SITE_DOMAIN_USAGE_HOURS_PER_MONTH: ((pages-site-domain-usage-hours-per-month=730))
+      - task: put-s3
+        image: general-task
+        config:
+          platform: linux
+          inputs:
+            - name: src
+            - name: s3-credentials
+          params:
+            APP_ENV: ((deploy-env))
+          run:
+            path: src/ci/tasks/put-s3-usage.sh
+      - task: delete-service-key
+        image: general-task
+        file: src/ci/partials/delete-service-key.yml
+        params:
+          _: #@ template.replace(data.values.env_cf)
+          APP_ENV: ((deploy-env))
+          CF_APP_NAME: pages-((deploy-env))
+          BUCKET_NAME: #@ bucket_name
+          SYNC_TYPE: USAGE
+
+    on_failure:
+      in_parallel:
+        #@ if/end env == 'dev':
+        -  #@ pr_hook("failure", "sync-s3-usage")
+        -  #@ slack_hook("failure", "sync-s3-usage")
+
+    on_success:
+      in_parallel:
+        #@ if/end env == 'dev':
+        -  #@ pr_hook("success", "sync-s3-usage")
+        -  #@ slack_hook("success", "sync-s3-usage")
 
 #!  RESOURCES
 
@@ -259,6 +345,11 @@ resources:
       stop: 1:00 AM
       location: America/New_York
   #@ end
+
+  - name: hourly
+    type: time
+    source:
+      interval: 1h
 
   - name: slack
   - name: pipeline-tasks

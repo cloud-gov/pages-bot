@@ -9,7 +9,6 @@ ENDPOINT=$(jq -r '.credentials.fips_endpoint' s3-credentials/credentials.json)
 
 AWS_ACCESS_KEY_ID=$ACCESS_KEY \
 AWS_SECRET_ACCESS_KEY=$SECRET_KEY \
-aws s3 sync src/pages-exports s3://$BUCKET/pages-exports-$APP_ENV \
+aws s3 sync src/pages-usage s3://$BUCKET/pages-usage-$APP_ENV \
   --region $REGION \
   --endpoint-url https://$ENDPOINT
-
