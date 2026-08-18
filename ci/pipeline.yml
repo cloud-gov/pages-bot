@@ -291,7 +291,6 @@ jobs:
       in_parallel:
         #@ if/end env == 'dev':
         -  #@ pr_hook("success", "sync-s3-usage")
-        -  #@ slack_hook("success", "sync-s3-usage")
 
 #!  RESOURCES
 
