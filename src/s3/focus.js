@@ -64,7 +64,7 @@ function getCsvContent(records, date) {
     'x_ResourceLifespanEndET',
     'x_ResourceRetentionStartET',
     'x_ResourceRetentionEndET',
-    'x_CreditsPerYear'
+    'x_CreditsPerYear',
   ];
 
   const { startOfHour, exclusiveEndOfHour } = getChargePeriodStartEnd(date);
@@ -161,14 +161,14 @@ const getRow = (headers, row, startOfHour, exclusiveEndOfHour) => {
       case 'x_PagesOrgResourceId':
         value = row[db.FIELD_ORG_ID];
         break;
-        case 'x_PagesOrgName':
-          value = row[db.FIELD_ORG_NAME];
-          break;
+      case 'x_PagesOrgName':
+        value = row[db.FIELD_ORG_NAME];
+        break;
       case 'x_SiteResourceId':
         value = row[db.FIELD_SITE_ID];
         break;
       case 'x_SiteName':
-        value = row[db.FIELD_SITE_OWNER] + "/" + row[db.FIELD_SITE_REPOSITORY];
+        value = row[db.FIELD_SITE_OWNER] + '/' + row[db.FIELD_SITE_REPOSITORY];
         break;
       // ResourceLifespanStart/End - when the resource was created and discontinued
       case 'x_ResourceLifespanStartET':
