@@ -55,13 +55,16 @@ function getCsvContent(records, date) {
     'ResourceType',
     'x_ResourceState',
     'x_PagesOrgResourceId',
+    'x_PagesOrgName',
     'x_SiteResourceId',
+    'x_SiteName',
     'x_ChargePeriodStartET',
     'x_ChargePeriodEndET',
     'x_ResourceLifespanStartET',
     'x_ResourceLifespanEndET',
     'x_ResourceRetentionStartET',
     'x_ResourceRetentionEndET',
+    'x_CreditsPerYear',
   ];
 
   const { startOfHour, exclusiveEndOfHour } = getChargePeriodStartEnd(date);
@@ -158,8 +161,14 @@ const getRow = (headers, row, startOfHour, exclusiveEndOfHour) => {
       case 'x_PagesOrgResourceId':
         value = row[db.FIELD_ORG_ID];
         break;
+      case 'x_PagesOrgName':
+        value = row[db.FIELD_ORG_NAME];
+        break;
       case 'x_SiteResourceId':
         value = row[db.FIELD_SITE_ID];
+        break;
+      case 'x_SiteName':
+        value = row[db.FIELD_SITE_OWNER] + '/' + row[db.FIELD_SITE_REPOSITORY];
         break;
       // ResourceLifespanStart/End - when the resource was created and discontinued
       case 'x_ResourceLifespanStartET':
@@ -174,6 +183,9 @@ const getRow = (headers, row, startOfHour, exclusiveEndOfHour) => {
         break;
       case 'x_ResourceRetentionEndET':
         value = toETFormat(row[db.FIELD_SITE_DELETED_AT]);
+        break;
+      case 'x_CreditsPerYear':
+        value = 144;
         break;
       default:
         throw new Error(`Unrecognized field ${column}`);

@@ -17,6 +17,11 @@ test('getFileName has correct format', () => {
   );
 });
 
+const HEADER_CUSTOM = `x_ResourceState,x_PagesOrgResourceId,x_PagesOrgName,x_SiteResourceId,x_SiteName,x_ChargePeriodStartET,x_ChargePeriodEndET,x_ResourceLifespanStartET,x_ResourceLifespanEndET,x_ResourceRetentionStartET,x_ResourceRetentionEndET,x_CreditsPerYear`;
+const HEADER_FOCUS = `ServiceName,ChargeCategory,ConsumedQuantity,ConsumedUnit,ChargePeriodStart,ChargePeriodEnd,Tags,ResourceId,ResourceName,ResourceType`;
+const TAGS = `"{""Pages Org Name"":""org name"",""Pages Org Id"":1,""Site Id"":2,""Site Owner"":""cloud-gov"",""Site Repository"":""pages-editor""}"`;
+const CREDITS_PER_YEAR = 144;
+
 test('getCsvContent processes collection to focus format, active', () => {
   const usageCollection = [
     {
@@ -33,17 +38,14 @@ test('getCsvContent processes collection to focus format, active', () => {
       domainCreatedAt: new Date('2024-04-15T14:00:00.000Z'),
     },
   ];
-  const headersFocus = `ServiceName,ChargeCategory,ConsumedQuantity,ConsumedUnit,ChargePeriodStart,ChargePeriodEnd,Tags,ResourceId,ResourceName,ResourceType`;
-  const headersCustom = `x_ResourceState,x_PagesOrgResourceId,x_SiteResourceId,x_ChargePeriodStartET,x_ChargePeriodEndET,x_ResourceLifespanStartET,x_ResourceLifespanEndET,x_ResourceRetentionStartET,x_ResourceRetentionEndET`;
   const serviceAndUsage = `Pages:Site:Domain,Usage,0.01643836,site-domain-hours`;
   const startEndUTC = `2026-06-12T01:00:00Z,2026-06-12T02:00:00Z`;
-  const tags = `"{""Pages Org Name"":""org name"",""Pages Org Id"":1,""Site Id"":2,""Site Owner"":""cloud-gov"",""Site Repository"":""pages-editor""}"`;
-  const resources = `3,cloud.gov,pages-site-domain,Active,1,2`;
+  const resources = `3,cloud.gov,pages-site-domain,Active,1,org name,2,cloud-gov/pages-editor`;
   const startEndET = `2026-06-11T21:00:00,2026-06-11T22:00:00,2024-04-15T10:00:00,,2024-03-15T10:00:00,2027-03-15T10:00:00`;
   assert.strictEqual(
     getCsvContent(usageCollection, new Date('2026-06-12T01:46:10.000Z')),
-    `${headersFocus},${headersCustom}
-${serviceAndUsage},${startEndUTC},${tags},${resources},${startEndET}`,
+    `${HEADER_FOCUS},${HEADER_CUSTOM}
+${serviceAndUsage},${startEndUTC},${TAGS},${resources},${startEndET},${CREDITS_PER_YEAR}`,
   );
 });
 
@@ -63,17 +65,14 @@ test('getCsvContent processes collection to focus format, inactive', () => {
       domainCreatedAt: new Date('2024-04-15T14:00:00.000Z'),
     },
   ];
-  const headersFocus = `ServiceName,ChargeCategory,ConsumedQuantity,ConsumedUnit,ChargePeriodStart,ChargePeriodEnd,Tags,ResourceId,ResourceName,ResourceType`;
-  const headersCustom = `x_ResourceState,x_PagesOrgResourceId,x_SiteResourceId,x_ChargePeriodStartET,x_ChargePeriodEndET,x_ResourceLifespanStartET,x_ResourceLifespanEndET,x_ResourceRetentionStartET,x_ResourceRetentionEndET`;
   const serviceAndUsage = `Pages:Site:Domain,Usage,0,site-domain-hours`;
   const startEndUTC = `2026-06-12T01:00:00Z,2026-06-12T02:00:00Z`;
-  const tags = `"{""Pages Org Name"":""org name"",""Pages Org Id"":1,""Site Id"":2,""Site Owner"":""cloud-gov"",""Site Repository"":""pages-editor""}"`;
-  const resources = `3,cloud.gov,pages-site-domain,Inactive,1,2`;
+  const resources = `3,cloud.gov,pages-site-domain,Inactive,1,org name,2,cloud-gov/pages-editor`;
   const startEndET = `2026-06-11T21:00:00,2026-06-11T22:00:00,2024-04-15T10:00:00,,2024-03-15T10:00:00,2027-03-15T10:00:00`;
   assert.strictEqual(
     getCsvContent(usageCollection, new Date('2026-06-12T01:46:10.000Z')),
-    `${headersFocus},${headersCustom}
-${serviceAndUsage},${startEndUTC},${tags},${resources},${startEndET}`,
+    `${HEADER_FOCUS},${HEADER_CUSTOM}
+${serviceAndUsage},${startEndUTC},${TAGS},${resources},${startEndET},${CREDITS_PER_YEAR}`,
   );
 });
 
@@ -94,16 +93,13 @@ test('getCsvContent processes collection to focus format, discontinued', () => {
       domainDeletedAt: new Date('2026-02-15T14:00:00.000Z'),
     },
   ];
-  const headersFocus = `ServiceName,ChargeCategory,ConsumedQuantity,ConsumedUnit,ChargePeriodStart,ChargePeriodEnd,Tags,ResourceId,ResourceName,ResourceType`;
-  const headersCustom = `x_ResourceState,x_PagesOrgResourceId,x_SiteResourceId,x_ChargePeriodStartET,x_ChargePeriodEndET,x_ResourceLifespanStartET,x_ResourceLifespanEndET,x_ResourceRetentionStartET,x_ResourceRetentionEndET`;
   const serviceAndUsage = `Pages:Site:Domain,Usage,0,site-domain-hours`;
   const startEndUTC = `2026-06-12T01:00:00Z,2026-06-12T02:00:00Z`;
-  const tags = `"{""Pages Org Name"":""org name"",""Pages Org Id"":1,""Site Id"":2,""Site Owner"":""cloud-gov"",""Site Repository"":""pages-editor""}"`;
-  const resources = `3,cloud.gov,pages-site-domain,Discontinued,1,2`;
+  const resources = `3,cloud.gov,pages-site-domain,Discontinued,1,org name,2,cloud-gov/pages-editor`;
   const startEndET = `2026-06-11T21:00:00,2026-06-11T22:00:00,2024-04-15T10:00:00,2026-02-15T09:00:00,2024-03-15T10:00:00,2027-03-15T10:00:00`;
   assert.strictEqual(
     getCsvContent(usageCollection, new Date('2026-06-12T01:46:10.000Z')),
-    `${headersFocus},${headersCustom}
-${serviceAndUsage},${startEndUTC},${tags},${resources},${startEndET}`,
+    `${HEADER_FOCUS},${HEADER_CUSTOM}
+${serviceAndUsage},${startEndUTC},${TAGS},${resources},${startEndET},${CREDITS_PER_YEAR}`,
   );
 });
