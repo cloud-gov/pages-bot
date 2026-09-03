@@ -1,3 +1,14 @@
+## 0.3.0 (2026-08-25)
+
+### Added
+
+- pages meter ingestion process for FOCUS format #2978
+- pages meter ingestion process for FOCUS format #2978
+
+### Maintenance
+
+- Update pipeline to post s3 usage export to slack only on failure 3053
+
 ## 0.2.0 (2026-06-17)
 
 ### Added
