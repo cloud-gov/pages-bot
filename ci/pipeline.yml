@@ -258,8 +258,6 @@ jobs:
         file: pipeline-tasks/tasks/run-command.yml
         params:
           COMMAND: npm run sync-s3-usage
-          SITE_DOMAIN_CREDITS_PER_MONTH: ((pages-site-domain-credits-per-month=12))
-          SITE_DOMAIN_USAGE_HOURS_PER_MONTH: ((pages-site-domain-usage-hours-per-month=730))
       - task: put-s3
         image: general-task
         config:

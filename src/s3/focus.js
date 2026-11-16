@@ -1,20 +1,6 @@
 const db = require('../db');
 const fs = require('fs');
 
-const SITE_DOMAIN_CREDITS_PER_MONTH =
-  Number(process.env.SITE_DOMAIN_CREDITS_PER_MONTH) || 12;
-const SITE_DOMAIN_USAGE_HOURS_PER_MONTH =
-  Number(process.env.SITE_DOMAIN_USAGE_HOURS_PER_MONTH) || 730;
-
-console.log(
-  `process.env.SITE_DOMAIN_CREDITS_PER_MONTH: ${process.env.SITE_DOMAIN_CREDITS_PER_MONTH}`,
-);
-console.log(
-  `process.env.SITE_DOMAIN_USAGE_HOURS_PER_MONTH: ${process.env.SITE_DOMAIN_USAGE_HOURS_PER_MONTH}`,
-);
-console.log(`SITE_DOMAIN_CREDITS_PER_MONTH: ${SITE_DOMAIN_CREDITS_PER_MONTH}`);
-console.log(`SITE_DOMAIN_USAGE_HOURS_PER_MONTH: ${SITE_DOMAIN_USAGE_HOURS_PER_MONTH}`);
-
 const PAGES_USAGE_DIR = `pages-usage`;
 const PAGES_USAGE_FILE_PREFIX = `pages-usage`;
 
@@ -64,7 +50,6 @@ function getCsvContent(records, date) {
     'x_ResourceLifespanEndET',
     'x_ResourceRetentionStartET',
     'x_ResourceRetentionEndET',
-    'x_CreditsPerYear',
   ];
 
   const { startOfHour, exclusiveEndOfHour } = getChargePeriodStartEnd(date);
@@ -115,12 +100,7 @@ const getRow = (headers, row, startOfHour, exclusiveEndOfHour) => {
         value = 'Usage';
         break;
       case 'ConsumedQuantity':
-        value =
-          resourceState === RESOURCE_STATE_ACTIVE
-            ? toFocusQuantity(
-                SITE_DOMAIN_CREDITS_PER_MONTH / SITE_DOMAIN_USAGE_HOURS_PER_MONTH,
-              )
-            : 0;
+        value = resourceState === RESOURCE_STATE_ACTIVE ? 1 : 0;
         break;
       case 'ConsumedUnit':
         value = 'site-domain-hours';
@@ -184,9 +164,6 @@ const getRow = (headers, row, startOfHour, exclusiveEndOfHour) => {
       case 'x_ResourceRetentionEndET':
         value = toETFormat(row[db.FIELD_SITE_DELETED_AT]);
         break;
-      case 'x_CreditsPerYear':
-        value = 144;
-        break;
       default:
         throw new Error(`Unrecognized field ${column}`);
         break;
@@ -216,8 +193,6 @@ const toETFormat = (date) =>
       })
         .format(date)
         .replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, '$3-$1-$2T$4:$5:$6');
-
-const toFocusQuantity = (value) => parseFloat(value.toFixed(8));
 
 const toCSVField = (value) => {
   const str = typeof value === 'object' ? JSON.stringify(value) : String(value);
