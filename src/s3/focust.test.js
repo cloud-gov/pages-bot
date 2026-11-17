@@ -17,7 +17,7 @@ test('getFileName has correct format', () => {
   );
 });
 
-const HEADER_CUSTOM = `x_ResourceState,x_PagesOrgResourceId,x_PagesOrgName,x_SiteResourceId,x_SiteName,x_ChargePeriodStartET,x_ChargePeriodEndET,x_ResourceLifespanStartET,x_ResourceLifespanEndET,x_ResourceRetentionStartET,x_ResourceRetentionEndET`;
+const HEADER_CUSTOM = `x_ResourceState,x_PagesOrgResourceId,x_PagesOrgName,x_SiteResourceId,x_SiteName,x_ChargePeriodStartET,x_ChargePeriodEndET,x_ResourceLifespanStartET,x_ResourceLifespanEndET,x_ResourceRetentionStartET,x_ResourceRetentionEndET,x_FormatVersion`;
 const HEADER_FOCUS = `ServiceName,ChargeCategory,ConsumedQuantity,ConsumedUnit,ChargePeriodStart,ChargePeriodEnd,Tags,ResourceId,ResourceName,ResourceType`;
 const TAGS = `"{""Pages Org Name"":""org name"",""Pages Org Id"":1,""Site Id"":2,""Site Owner"":""cloud-gov"",""Site Repository"":""pages-editor""}"`;
 
@@ -44,7 +44,7 @@ test('getCsvContent processes collection to focus format, active', () => {
   assert.strictEqual(
     getCsvContent(usageCollection, new Date('2026-06-12T01:46:10.000Z')),
     `${HEADER_FOCUS},${HEADER_CUSTOM}
-${serviceAndUsage},${startEndUTC},${TAGS},${resources},${startEndET}`,
+${serviceAndUsage},${startEndUTC},${TAGS},${resources},${startEndET},2`,
   );
 });
 
@@ -71,7 +71,7 @@ test('getCsvContent processes collection to focus format, inactive', () => {
   assert.strictEqual(
     getCsvContent(usageCollection, new Date('2026-06-12T01:46:10.000Z')),
     `${HEADER_FOCUS},${HEADER_CUSTOM}
-${serviceAndUsage},${startEndUTC},${TAGS},${resources},${startEndET}`,
+${serviceAndUsage},${startEndUTC},${TAGS},${resources},${startEndET},2`,
   );
 });
 
@@ -99,7 +99,7 @@ test('getCsvContent processes collection to focus format, discontinued', () => {
   assert.strictEqual(
     getCsvContent(usageCollection, new Date('2026-06-12T01:46:10.000Z')),
     `${HEADER_FOCUS},${HEADER_CUSTOM}
-${serviceAndUsage},${startEndUTC},${TAGS},${resources},${startEndET}`,
+${serviceAndUsage},${startEndUTC},${TAGS},${resources},${startEndET},2`,
   );
 });
 

@@ -4,6 +4,8 @@ const fs = require('fs');
 const PAGES_USAGE_DIR = `pages-usage`;
 const PAGES_USAGE_FILE_PREFIX = `pages-usage`;
 
+const FORMAT_VERSION = 2;
+
 const RESOURCE_STATE_ACTIVE = 'Active';
 const RESOURCE_STATE_INACTIVE = 'Inactive';
 const RESOURCE_STATE_DISCONTINUED = 'Discontinued';
@@ -50,6 +52,7 @@ function getCsvContent(records, date) {
     'x_ResourceLifespanEndET',
     'x_ResourceRetentionStartET',
     'x_ResourceRetentionEndET',
+    'x_FormatVersion',
   ];
 
   const { startOfHour, exclusiveEndOfHour } = getChargePeriodStartEnd(date);
@@ -163,6 +166,9 @@ const getRow = (headers, row, startOfHour, exclusiveEndOfHour) => {
         break;
       case 'x_ResourceRetentionEndET':
         value = toETFormat(row[db.FIELD_SITE_DELETED_AT]);
+        break;
+      case 'x_FormatVersion':
+        value = FORMAT_VERSION;
         break;
       default:
         throw new Error(`Unrecognized field ${column}`);
