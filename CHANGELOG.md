@@ -1,3 +1,9 @@
+## 0.4.0 (2026-11-23)
+
+### Added
+
+- Pages usage ConsumedQuantity should be in site-domain-hours rather than in credits #3171
+
 ## 0.3.0 (2026-08-25)
 
 ### Added
